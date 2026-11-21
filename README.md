@@ -37,6 +37,8 @@ voice:
   cloned: true
   consent: true               # required for cloned voices, or the script is rejected
 brand: { background: "#0b0b0b", foreground: "#ffffff", accent: "#d6ff3d" }
+pronunciations:               # spoken form for names the voice would get wrong
+  ENT-42: E N T forty-two
 scenes:
   - title: Bookings on autopilot
     subtitle: Northwind
@@ -106,7 +108,7 @@ rendered videos.
 
 - [ ] Background music with automatic ducking under the narration
 - [ ] Batch mode: one personalised demo per row of a CSV (name, company, screenshot)
-- [ ] Pronunciation dictionary per brand (product names, acronyms) applied before TTS
+- [x] Pronunciation dictionary per brand (product names, acronyms) applied before TTS
 - [ ] Word-level re-synthesis of only the flagged scene
 
 ## License

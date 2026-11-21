@@ -246,3 +246,38 @@ def test_cli_help_renders(capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit):
         cli.main(["render", "--help"])
     assert "WER > 15%" in capsys.readouterr().out
+
+
+def test_pronunciations_are_whole_word_and_longest_first() -> None:
+    script = DemoScript(
+        name="p",
+        pronunciations={"ENT-42": "E N T forty-two", "ENT": "enterprise", "SSO": "S S O"},
+        scenes=[Scene(narration="x", title="t")],
+    )
+    assert script.spoken("Plan ENT-42 adds SSO.") == "Plan E N T forty-two adds S S O."
+    assert script.spoken("ENT and RENT") == "enterprise and RENT"
+
+
+class RecordingTTS(ToneTTS):
+    def __init__(self) -> None:
+        self.texts: list[str] = []
+
+    def synthesize(self, text: str, out: Path) -> Path:
+        self.texts.append(text)
+        return super().synthesize(text, out)
+
+
+def test_pipeline_speaks_the_pronunciation_and_scores_against_it(
+    assets: Path, tmp_path: Path
+) -> None:
+    script = DemoScript(
+        name="p",
+        voice=Voice(provider="tone"),
+        pronunciations={"ENT-42": "E N T forty-two"},
+        scenes=[Scene(narration="Plan ENT-42 adds audit logs.", title="Plans")],
+    )
+    tts = RecordingTTS()
+    heard = ScriptTranscriber(["Plan E N T forty-two adds audit logs."])
+    report = render(script, tts, heard, tmp_path / "p.mp4")
+    assert tts.texts == ["Plan E N T forty-two adds audit logs."]
+    assert report.flagged == []
