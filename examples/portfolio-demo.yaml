@@ -1,0 +1,22 @@
+# Example: a 30-second narrated walkthrough built from screenshots of other projects.
+name: portfolio-demo
+language: en
+voice:
+  provider: say          # use elevenlabs for production; say is offline and free
+  voice: Samantha
+brand:
+  background: "#0b0b0b"
+  foreground: "#ffffff"
+  accent: "#d6ff3d"
+scenes:
+  - title: Ask your documents
+    subtitle: rag-docs-assistant
+    narration: Ask a question about your documents, and get a short answer with the exact page it came from.
+  - image: assets/rag-ui.png
+    narration: Hybrid search finds the right passage, and every claim is cited, so you can check it in one click.
+  - image: assets/mcp-inspector.png
+    narration: The same data tools are available to any AI agent, through a secure MCP server.
+  - title: Built and measured
+    subtitle: evals in every pipeline
+    narration: Every feature ships with an evaluation, so we know it works before our customers do.
+    pause_after: 0.8

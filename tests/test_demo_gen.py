@@ -9,7 +9,7 @@ import pytest
 from PIL import Image
 
 from demo_gen import cli
-from demo_gen.captions import Word, chunk, to_ass, to_srt, tokens, word_error_rate
+from demo_gen.captions import Word, chunk, pcm16k, to_ass, to_srt, tokens, word_error_rate
 from demo_gen.cards import title_card
 from demo_gen.ffmpeg import FFmpegError, duration, run
 from demo_gen.pipeline import render
@@ -223,3 +223,20 @@ def test_build_tts_and_missing_key(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_ffmpeg_errors_are_readable(tmp_path: Path) -> None:
     with pytest.raises(FFmpegError, match="ffprobe failed"):
         duration(tmp_path / "missing.wav")
+
+
+def test_pcm16k_decodes_to_whisper_input(tmp_path: Path) -> None:
+    wav = ToneTTS().synthesize("one two three four five six", tmp_path / "t.wav")
+    samples = pcm16k(wav)
+    assert samples.dtype.name == "float32"
+    assert len(samples) / 16000 == pytest.approx(duration(wav), abs=0.05)
+
+
+def test_relative_output_directory(assets: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(assets)
+    script = _script(assets)
+    script.scenes = script.scenes[:1]
+    report = render(
+        script, ToneTTS(), ScriptTranscriber([script.scenes[0].narration]), Path("rel/out.mp4")
+    )
+    assert (assets / "rel" / "out.mp4").exists() and report.seconds > 0

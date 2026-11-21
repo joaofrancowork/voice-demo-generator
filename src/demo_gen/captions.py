@@ -9,10 +9,14 @@ TTS failures: skipped sentences, mispronounced product names, garbled numbers.
 from __future__ import annotations
 
 import re
+import subprocess
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
+
+import numpy as np
+import numpy.typing as npt
 
 from demo_gen.script import Aspect, Brand
 
@@ -28,6 +32,20 @@ class Transcriber(Protocol):
     def words(self, audio: Path, language: str) -> list[Word]: ...
 
 
+def pcm16k(audio: Path) -> npt.NDArray[np.float32]:
+    """Decode with ffmpeg to 16 kHz mono float32, the input Whisper expects.
+
+    Doing it here avoids faster-whisper's PyAV decoder, whose API changes between
+    releases, and reuses the ffmpeg that the rest of the pipeline already needs.
+    """
+    raw = subprocess.run(
+        ["ffmpeg", "-v", "error", "-i", str(audio), "-f", "f32le", "-ac", "1", "-ar", "16000", "-"],
+        capture_output=True,
+        check=True,
+    ).stdout
+    return np.frombuffer(raw, dtype=np.float32)
+
+
 class WhisperTranscriber:  # pragma: no cover - downloads a model; exercised end to end
     def __init__(self, model: str = "small") -> None:
         from faster_whisper import WhisperModel
@@ -35,7 +53,7 @@ class WhisperTranscriber:  # pragma: no cover - downloads a model; exercised end
         self.model = WhisperModel(model, device="cpu", compute_type="int8")
 
     def words(self, audio: Path, language: str) -> list[Word]:
-        segments, _ = self.model.transcribe(str(audio), language=language, word_timestamps=True)
+        segments, _ = self.model.transcribe(pcm16k(audio), language=language, word_timestamps=True)
         return [
             Word(w.word.strip(), w.start, w.end)
             for segment in segments

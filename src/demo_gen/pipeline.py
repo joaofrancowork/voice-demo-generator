@@ -47,7 +47,9 @@ def render(
     workdir: Path | None = None,
 ) -> RenderReport:
     size = ffmpeg.SIZES[aspect]
-    work = workdir or out.parent / f".build-{out.stem}"
+    # ffmpeg's concat lists resolve relative paths against the list file: use absolute ones.
+    out = out.resolve()
+    work = (workdir or out.parent / f".build-{out.stem}").resolve()
     work.mkdir(parents=True, exist_ok=True)
     clips: list[Path] = []
     all_words: list[Word] = []
