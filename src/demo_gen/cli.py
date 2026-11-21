@@ -21,7 +21,9 @@ def main(argv: list[str] | None = None, transcriber: Transcriber | None = None) 
     r.add_argument("--aspect", choices=["16:9", "9:16", "both"], default="16:9")
     r.add_argument("--voice-provider", choices=["elevenlabs", "say", "tone"])
     r.add_argument("--whisper-model", default="small")
-    r.add_argument("--strict", action="store_true", help=f"Fail if any scene WER > {MAX_WER:.0%}")
+    r.add_argument(
+        "--strict", action="store_true", help=f"Fail if any scene WER > {MAX_WER * 100:.0f}%%"
+    )
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 

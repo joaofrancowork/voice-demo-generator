@@ -240,3 +240,9 @@ def test_relative_output_directory(assets: Path, monkeypatch: pytest.MonkeyPatch
         script, ToneTTS(), ScriptTranscriber([script.scenes[0].narration]), Path("rel/out.mp4")
     )
     assert (assets / "rel" / "out.mp4").exists() and report.seconds > 0
+
+
+def test_cli_help_renders(capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit):
+        cli.main(["render", "--help"])
+    assert "WER > 15%" in capsys.readouterr().out
