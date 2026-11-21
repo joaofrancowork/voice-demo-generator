@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Literal
 
@@ -58,9 +59,20 @@ class Brand(BaseModel):
 class DemoScript(BaseModel):
     name: str
     language: str = "en"
+    pronunciations: dict[str, str] = Field(
+        default_factory=dict,
+        description="Spoken form of product names and acronyms, e.g. {'ENT-42': 'E N T 42'}",
+    )
     voice: Voice = Voice()
     brand: Brand = Brand()
     scenes: list[Scene] = Field(min_length=1)
+
+    def spoken(self, text: str) -> str:
+        """The text as it should be spoken: whole-word replacements, longest terms first."""
+        for term in sorted(self.pronunciations, key=len, reverse=True):
+            pattern = rf"(?<![\w-]){re.escape(term)}(?![\w-])"
+            text = re.sub(pattern, self.pronunciations[term], text)
+        return text
 
     @classmethod
     def load(cls, path: Path) -> DemoScript:

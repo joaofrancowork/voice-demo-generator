@@ -57,10 +57,13 @@ def render(
     offset = 0.0
 
     for i, scene in enumerate(script.scenes, 1):
-        audio = tts.synthesize(scene.narration, work / f"scene{i:02d}.wav")
+        to_say = script.spoken(scene.narration)
+        audio = tts.synthesize(to_say, work / f"scene{i:02d}.wav")
         words = transcriber.words(audio, script.language)
         spoken = " ".join(w.text for w in words)
-        wer = word_error_rate(scene.narration, spoken)
+        # Compare with what was meant to be *said*, so a pronunciation entry never
+        # counts as an error.
+        wer = word_error_rate(to_say, spoken)
         if wer > MAX_WER:
             log.warning("scene %d: narration differs from the script (WER %.0f%%)", i, wer * 100)
         seconds = ffmpeg.duration(audio) + scene.pause_after
